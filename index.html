@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Карта кампуса УРФУ</title>
-    
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         * {
             margin: 0;
@@ -213,6 +213,42 @@
             transition: width 0.5s ease;
         }
         
+        .instructions {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            max-width: 800px;
+        }
+        
+        .instructions h3 {
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        .instructions p {
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+        
+        .url-info {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        
+        .success-message {
+            background: rgba(46, 204, 113, 0.3);
+            padding: 15px;
+            border-radius: 8px;
+            margin: 15px 0;
+            text-align: center;
+            display: none;
+        }
+        
         @media (max-width: 900px) {
             .content {
                 flex-direction: column;
@@ -309,10 +345,31 @@
                 <i class="fas fa-info-circle"></i> Статус: Ни одна зона еще не посещена
             </div>
             
+            <div class="success-message" id="successMessage">
+                <i class="fas fa-check-circle"></i> Зона успешно добавлена! Все предыдущие зоны сохранены.
+            </div>
+            
             <button class="reset-btn" id="resetBtn">
                 <i class="fas fa-redo"></i> Сбросить прогресс
             </button>
         </div>
+    </div>
+
+    <div class="instructions">
+        <h3>Решение проблемы с сохранением состояния зон</h3>
+        <p>Теперь при сканировании нового QR-кода все предыдущие зоны сохраняют свой цвет!</p>
+        
+        <div class="url-info" id="urlInfo">
+            Текущий URL: Анализ...
+        </div>
+        
+        <p>Как это работает:</p>
+        <ol>
+            <li>При сканировании QR-кода, параметр zone добавляется в URL</li>
+            <li>Страница обрабатывает параметр и добавляет новую зону к списку посещенных</li>
+            <li>Состояние всех зон сохраняется в localStorage браузера</li>
+            <li>При загрузке страницы, все ранее посещенные зоны восстанавливаются</li>
+        </ol>
     </div>
 
     <script>
@@ -321,10 +378,18 @@
             const statusElement = document.getElementById('status');
             const resetBtn = document.getElementById('resetBtn');
             const progressBar = document.getElementById('progressBar');
+            const urlInfo = document.getElementById('urlInfo');
+            const successMessage = document.getElementById('successMessage');
+            
+            // Показать текущий URL
+            urlInfo.textContent = 'Текущий URL: ' + window.location.href;
             
             // Загрузка состояния из localStorage
             loadProgress();
             updateStatus();
+            
+            // Обработка параметров URL (должна быть после загрузки состояния)
+            processUrlParameters();
             
             // Обработчики для кнопок симуляции QR-кодов
             document.querySelectorAll('.qr-btn').forEach(button => {
@@ -350,10 +415,29 @@
                 }, 1500);
             });
             
-            // Функция "сканирования" QR-кода
-            function scanQRCode(zoneId) {
-                const zoneElement = document.getElementById('zone' + zoneId);
+            // Функция обработки параметров URL
+            function processUrlParameters() {
+                const urlParams = new URLSearchParams(window.location.search);
+                const zoneParam = urlParams.get('zone');
                 
+                if (zoneParam) {
+                    // Если в URL есть параметр zone, добавляем зону к посещенным
+                    addZoneToVisited(zoneParam);
+                    
+                    // Показываем сообщение об успехе
+                    successMessage.style.display = 'block';
+                    setTimeout(() => {
+                        successMessage.style.display = 'none';
+                    }, 3000);
+                    
+                    // Обновляем URL без параметров (чистый URL)
+                    window.history.replaceState({}, document.title, window.location.pathname);
+                    urlInfo.textContent = 'Текущий URL: ' + window.location.href;
+                }
+            }
+            
+            // Функция добавления зоны к посещенным
+            function addZoneToVisited(zoneId) {
                 // Получаем текущий список посещенных зон
                 let visitedZones = JSON.parse(localStorage.getItem('visitedZones')) || [];
                 
@@ -363,15 +447,23 @@
                     localStorage.setItem('visitedZones', JSON.stringify(visitedZones));
                     
                     // Анимация для новой зоны
-                    zoneElement.classList.add('pulse');
-                    setTimeout(() => {
-                        zoneElement.classList.remove('pulse');
-                    }, 1500);
+                    const zoneElement = document.getElementById('zone' + zoneId);
+                    if (zoneElement) {
+                        zoneElement.classList.add('pulse');
+                        setTimeout(() => {
+                            zoneElement.classList.remove('pulse');
+                        }, 1500);
+                    }
                 }
                 
                 // Обновляем внешний вид всех посещенных зон
                 updateZonesAppearance();
                 updateStatus();
+            }
+            
+            // Функция "сканирования" QR-кода
+            function scanQRCode(zoneId) {
+                addZoneToVisited(zoneId);
             }
             
             // Загрузка прогресса из localStorage
