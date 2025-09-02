@@ -351,10 +351,10 @@
             loadProgress();
             updateStatus();
             
-            // Обработка параметров URL (должна быть после загрузки состояния)
+            // Обработка параметров url (должна быть после загрузки состояния)
             processUrlParameters();
             
-            // Обработчики для кнопок симуляции QR-кодов
+            // Обработчики для кнопок симуляции qr-кодов
             document.querySelectorAll('.qr-btn').forEach(button => {
                 button.addEventListener('click', function() {
                     const zoneId = this.getAttribute('data-zone');
@@ -378,13 +378,13 @@
                 }, 1500);
             });
             
-            // Функция обработки параметров URL
+            // Функция обработки параметров url
             function processUrlParameters() {
                 const urlParams = new URLSearchParams(window.location.search);
                 const zoneParam = urlParams.get('zone');
                 
                 if (zoneParam) {
-                    // Если в URL есть параметр zone, добавляем зону к посещенным
+                    // Если в url есть параметр zone, добавляем зону к посещенным
                     addZoneToVisited(zoneParam);
                     
                     // Показываем сообщение об успехе
@@ -393,7 +393,7 @@
                         successMessage.style.display = 'none';
                     }, 3000);
                     
-                    // Обновляем URL без параметров (чистый URL)
+                    // Обновляем url без параметров
                     window.history.replaceState({}, document.title, window.location.pathname);
                 }
             }
@@ -423,7 +423,7 @@
                 updateStatus();
             }
             
-            // Функция "сканирования" QR-кода
+            // Псевдо сканирование qr-кода
             function scanQRCode(zoneId) {
                 addZoneToVisited(zoneId);
             }
@@ -476,3 +476,4 @@
     </script>
 </body>
 </html>
+
